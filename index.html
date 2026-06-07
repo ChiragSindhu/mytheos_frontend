@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DebugSwarm - AI Code Analysis</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" />
+    
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+        }
+
+        .dark {
+            color-scheme: dark;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #6b7280;
+        }
+
+        /* Code editor styling */
+        .code-editor {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Tab animations */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Progress animation */
+        .progress-bar {
+            animation: progress 2s ease-in-out infinite;
+        }
+
+        @keyframes progress {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+        /* Event log styling */
+        .event-log {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .event-item.info { border-left-color: #3b82f6; }
+        .event-item.success { border-left-color: #10b981; }
+        .event-item.warning { border-left-color: #f59e0b; }
+        .event-item.error { border-left-color: #ef4444; }
+
+        /* Result cards */
+        .result-card {
+            border-left: 4px solid var(--primary);
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .code-editor {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <i data-lucide="bug" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <h1 class="text-xl font-semibold text-gray-900 dark:text-white">DebugSwarm</h1>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Theme Toggle -->
+                    <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <i data-lucide="sun" class="w-5 h-5 text-gray-600 dark:text-gray-300 hidden dark:block"></i>
+                        <i data-lucide="moon" class="w-5 h-5 text-gray-600 dark:text-gray-300 dark:hidden"></i>
+                    </button>
+                    
+                    <!-- Settings -->
+                    <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <i data-lucide="settings" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Input Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+            
+            <!-- Tabs -->
+            <div class="border-b border-gray-200 dark:border-gray-700">
+                <nav class="flex -mb-px space-x-8 px-6" aria-label="Tabs">
+                    <button class="tab-button py-4 px-1 border-b-2 font-medium text-sm transition-colors active" data-tab="github">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="github" class="w-4 h-4"></i>
+                            <span>GitHub Repository</span>
+                        </div>
+                    </button>
+                    <button class="tab-button py-4 px-1 border-b-2 font-medium text-sm transition-colors" data-tab="file">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="file-code" class="w-4 h-4"></i>
+                            <span>File Upload</span>
+                        </div>
+                    </button>
+                    <button class="tab-button py-4 px-1 border-b-2 font-medium text-sm transition-colors" data-tab="code">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="code" class="w-4 h-4"></i>
+                            <span>Code Editor</span>
+                        </div>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-6">
+                
+                <!-- GitHub Tab -->
+                <div id="github-tab" class="tab-content active">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Repository URL
+                            </label>
+                            <input 
+                                type="text" 
+                                id="repoUrl"
+                                placeholder="https://github.com/username/repository"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Error Log or Issue Number
+                            </label>
+                            <textarea 
+                                id="githubErrorLog"
+                                rows="6"
+                                placeholder="Paste error log or enter issue number..."
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all code-editor"
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Upload Tab -->
+                <div id="file-tab" class="tab-content">
+                    <div class="space-y-4">
+                        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer" id="dropZone">
+                            <i data-lucide="upload-cloud" class="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-3"></i>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                Drop your Python file here or click to browse
+                            </p>
+                            <input type="file" id="fileInput" accept=".py" class="hidden" />
+                            <button onclick="document.getElementById('fileInput').click()" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                Select File
+                            </button>
+                        </div>
+                        
+                        <div id="filePreview" class="hidden">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <i data-lucide="file-text" class="w-5 h-5 text-blue-600"></i>
+                                    <span id="fileName" class="text-sm font-medium text-gray-900 dark:text-white"></span>
+                                </div>
+                                <button onclick="clearFile()" class="text-red-600 hover:text-red-700">
+                                    <i data-lucide="x" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Editor Tab -->
+                <div id="code-tab" class="tab-content">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Python Code
+                            </label>
+                            <button onclick="loadSampleCode()" class="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center space-x-1">
+                                <i data-lucide="flask-conical" class="w-4 h-4"></i>
+                                <span>Load Sample Bug</span>
+                            </button>
+                        </div>
+                        <textarea 
+                            id="codeEditor"
+                            rows="16"
+                            placeholder="# Paste or write your Python code here..."
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all code-editor font-mono"
+                        ></textarea>
+                        
+                        <div class="flex items-center space-x-4">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="autoRun" checked class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
+                                <span class="text-sm text-gray-700 dark:text-gray-300">Auto-run code</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Action Bar -->
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-750 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between rounded-b-lg">
+                <div class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                    <span>Secure analysis</span>
+                </div>
+                <button 
+                    id="analyzeBtn"
+                    onclick="startAnalysis()"
+                    class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <i data-lucide="play" class="w-4 h-4"></i>
+                    <span>Analyze Code</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Section -->
+        <div id="statusSection" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Analysis Progress</h2>
+                    <span id="statusBadge" class="px-3 py-1 text-xs font-medium rounded-full"></span>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="mb-4">
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                        <div id="progressBar" class="h-full bg-blue-600 transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Session Info -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <i data-lucide="hash" class="w-5 h-5 text-gray-500"></i>
+                        <div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Session ID</p>
+                            <p id="sessionId" class="text-sm font-mono text-gray-900 dark:text-white">-</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <i data-lucide="clock" class="w-5 h-5 text-gray-500"></i>
+                        <div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Duration</p>
+                            <p id="duration" class="text-sm font-mono text-gray-900 dark:text-white">0s</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <i data-lucide="activity" class="w-5 h-5 text-gray-500"></i>
+                        <div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Current Phase</p>
+                            <p id="currentPhase" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Log -->
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <div class="px-4 py-2 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Event Log</span>
+                        <button onclick="clearEvents()" class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">Clear</button>
+                    </div>
+                    <div id="eventLog" class="event-log p-4 space-y-2 bg-white dark:bg-gray-800">
+                        <!-- Events will be added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden space-y-6">
+            
+            <!-- Execution Error -->
+            <div id="errorCard" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-red-200 dark:border-red-900">
+                <div class="p-6">
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center">
+                                <i data-lucide="alert-circle" class="w-6 h-6 text-red-600 dark:text-red-400"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Execution Error Detected</h3>
+                            <pre id="errorContent" class="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg overflow-x-auto"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Output -->
+            <div id="successCard" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-green-200 dark:border-green-900">
+                <div class="p-6">
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+                                <i data-lucide="check-circle" class="w-6 h-6 text-green-600 dark:text-green-400"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Code Executed Successfully</h3>
+                            <pre id="successContent" class="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Results -->
+            <div id="analysisCards" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Root Cause -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 result-card">
+                    <div class="p-6">
+                        <div class="flex items-center space-x-2 mb-4">
+                            <i data-lucide="target" class="w-5 h-5 text-blue-600"></i>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Root Cause</h3>
+                        </div>
+                        <div id="rootCauseContent" class="text-sm text-gray-700 dark:text-gray-300 prose dark:prose-invert max-w-none">
+                            <!-- Content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suggested Fix -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 result-card">
+                    <div class="p-6">
+                        <div class="flex items-center space-x-2 mb-4">
+                            <i data-lucide="wrench" class="w-5 h-5 text-blue-600"></i>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Suggested Fix</h3>
+                        </div>
+                        <div id="fixContent" class="text-sm text-gray-700 dark:text-gray-300">
+                            <!-- Content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Analysis -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 result-card">
+                    <div class="p-6">
+                        <div class="flex items-center space-x-2 mb-4">
+                            <i data-lucide="search-code" class="w-5 h-5 text-blue-600"></i>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Code Analysis</h3>
+                        </div>
+                        <div id="codeAnalysisContent" class="text-sm text-gray-700 dark:text-gray-300">
+                            <!-- Content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Suggestions -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 result-card">
+                    <div class="p-6">
+                        <div class="flex items-center space-x-2 mb-4">
+                            <i data-lucide="flask-conical" class="w-5 h-5 text-blue-600"></i>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Test Suggestions</h3>
+                        </div>
+                        <div id="testsContent" class="text-sm text-gray-700 dark:text-gray-300">
+                            <!-- Content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200 dark:border-gray-700 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                    DebugSwarm v1.0.0 - AI-Powered Code Analysis
+                </p>
+                <div class="flex items-center space-x-6">
+                    <a href="#" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Documentation</a>
+                    <a href="#" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">API</a>
+                    <a href="#" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    
+    <script src="app.js"></script>
+</body>
+</html>
