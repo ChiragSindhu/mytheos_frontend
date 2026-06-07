@@ -6,7 +6,7 @@ An autonomous AI debugging swarm that investigates software failures, identifies
 
 ---
 
-## 🚀 Microsoft Build AI Hackathon Submission
+##  Microsoft Build AI Hackathon Submission
 
 ### Submission Details
 
@@ -54,27 +54,16 @@ The system mimics the workflow of an experienced engineering team.
 ---
 
 # Key Features
-
-✅ Repository Analysis
-
-✅ Automated Bug Investigation
-
-✅ Stack Trace Understanding
-
-✅ Context-Aware Code Search
-
-✅ Root Cause Detection
-
-✅ Autonomous Fix Generation
-
-✅ Regression Test Creation
-
-✅ Patch Validation
-
-✅ Pull Request Ready Output
-
-✅ Multi-Agent Collaboration
-
+Repository Analysis
+Automated Bug Investigation
+Stack Trace Understanding
+Context-Aware Code Search
+Root Cause Detection
+Autonomous Fix Generation
+Regression Test Creation
+Patch Validation
+Pull Request Ready Output
+Multi-Agent Collaboration
 ---
 
 # Agent Swarm Architecture
@@ -209,9 +198,8 @@ Final Patch & Report
 
 ## Frontend
 
-* Next.js
-* TypeScript
-* React
+* Javascript
+* HTML
 * Tailwind CSS
 
 ## Backend
